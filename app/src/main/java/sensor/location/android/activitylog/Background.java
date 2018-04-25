@@ -51,7 +51,9 @@ public class Background extends Service {
                     notificationChannel.setShowBadge(true);
                     notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                     NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                    manager.createNotificationChannel(notificationChannel);
+                    if (manager != null) {
+                        manager.createNotificationChannel(notificationChannel);
+                    }
                 }
 
                 Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.background_running);
@@ -73,6 +75,17 @@ public class Background extends Service {
                 startForeground(101, updateNotification());
 
             }
+        }else{
+            Bitmap icon = BitmapFactory.decodeResource(getResources(),
+                    R.drawable.activity_log_icon);
+
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setContentTitle("Activity logger")
+                    .setContentText("data recording on going")
+                    .setSmallIcon(R.drawable.background_running)
+                    .setOngoing(true).build();
+
+            startForeground(101, notification);
         }
         storeInternally("Background operations initiated");
         return START_STICKY;
@@ -138,6 +151,7 @@ public class Background extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
+        storeInternally("activity Log all apps running in background were destroyed");
         if (Build.VERSION.SDK_INT >= 26) {
             startForegroundService(new Intent(this, Beric.class));
         }else{
@@ -148,12 +162,12 @@ public class Background extends Service {
 
     @Override
     public void onTrimMemory(int level) {
+        storeInternally("Excessive amount of apps open, trim occurred");
         if (Build.VERSION.SDK_INT >= 26) {
             startForegroundService(new Intent(this, Beric.class));
         }else{
             startService(new Intent(this, Beric.class));
         }
-        storeInternally("Excessive amount of apps open, trim occurred");
         super.onTrimMemory(level);
     }
 
